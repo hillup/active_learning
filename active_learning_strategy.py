@@ -21,6 +21,10 @@ class active_learning_selection:
         self.labeled_scores = labeled_scores
         self.num_select = num_select
 
+    def random_sample(self):
+        select_idx = np.random.choice(a=self.unlabeled_scores.shape[0], size=self.num_select, replace=False)
+        return select_idx
+
     def least_confident_sample(self):
         # shape: [batch_size, num_classes] -> [batch_size]
         unlabeled_scores = self.unlabeled_scores.max(axis=1)
@@ -70,6 +74,8 @@ if __name__ == "__main__":
     ac_lr = active_learning_selection(predict_scores, 100)
     # use least confident sample
     least_confident_sample = ac_lr.least_confident_sample()
+    from IPython import embed
+    embed()
 
 
 

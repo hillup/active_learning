@@ -14,6 +14,7 @@ class active_learning_selection:
     def __init__(self, unlabeled_scores, num_select, labeled_scores=None):
         """
         :param unlabeled_scores: unlabeled pool's scores,the shape is [batch_size, num_classes]
+        :param labeled_scores: training samples pool's scores,the shape is [batch_size, num_classes]
         :param num_select: the number need to label
         """
         self.unlabeled_scores = unlabeled_scores
@@ -61,6 +62,7 @@ class active_learning_selection:
     def k_center_greedy(self):
         if not self.labeled_scores:
             raise ValueError("Input labeled_scores is not valid")
+
 
 
 if __name__ == "__main__":

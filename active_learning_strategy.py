@@ -5,11 +5,14 @@
 
 import os
 import numpy as np
+import pandas as pd
 
 from sklearn.cluster import KMeans
 from scipy.special import softmax
+from scipy.spatial.distance import cdist, squareform
+from ac_utils import cal_distances
 
-
+# for single classifier
 class active_learning_selection:
     def __init__(self, unlabeled_scores, num_select, labeled_scores=None):
         """
@@ -64,16 +67,32 @@ class active_learning_selection:
         return np.array(select_idx)
 
     def k_center_greedy(self):
-        if not self.labeled_scores:
+        if not self.labeled_scores.all():
             raise ValueError("Input labeled_scores is not valid")
+        distances = cal_distances(self.labeled_scores, self.unlabeled_scores)
+        # get min distance for each unlabeled sample
+        min_dist = np.min(distances, axis=0).reshape(1, self.unlabeled_scores.shape[0])
+        select_idx = []
+        farthest = np.argmax(min_dist)
+        select_idx.append(farthest)
+        # once add the selected unlabeled sample to labeled pool, recalculate the max min value
+        for i in range(self.num_select - 1):
+            distances = cal_distances(self.unlabeled_scores[farthest, :].reshape(1, self.unlabeled_scores.shape[1]), self.unlabeled_scores)
+            min_dist = np.vstack((min_dist, distances))
+            min_dist = np.min(min_dist, axis=0).reshape(1, self.unlabeled_scores.shape[0])
+            farthest = np.argmax(min_dist)
+            select_idx.append(farthest)
+        return np.array(select_idx)
+
 
 
 
 if __name__ == "__main__":
     predict_scores = softmax(np.random.random((1000, 261)), axis=1)
-    ac_lr = active_learning_selection(predict_scores, 100)
+    labeled_scores = softmax(np.random.random((20000, 261)), axis=1)
+    ac_lr = active_learning_selection(predict_scores, 100, labeled_scores)
     # use least confident sample
-    least_confident_sample = ac_lr.least_confident_sample()
+    least_confident_sample = ac_lr.k_center_greedy()
     from IPython import embed
     embed()
 
